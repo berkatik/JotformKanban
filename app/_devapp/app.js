@@ -112,7 +112,6 @@ class Myapp extends Component {
         this.state.data.cards.push(newCard);
         this.state.data.columns[columnId].cardIds.push(newCard.id);
 
-        this.setState(this.state);
 
         if(columnTitle != "Uncategorized") {
             submission[this.state.qid] = columnTitle;
@@ -123,8 +122,10 @@ class Myapp extends Component {
         submission[this.state.questions[1].qid] = newCard.content;
 
         JF.createFormSubmission(this.state.fid, submission, function (response) {
-            console.log(response.URL);
+            newCard["sid"] = response.submissionID;
         });
+
+        this.setState(this.state);
     }
 
     editCard = (editedCard) => {
