@@ -3,6 +3,7 @@
     $requestPayload = json_decode($requestPayload);
     $structure = $requestPayload->structure;
     $qid = $requestPayload->qid;
+    $questions = $requestPayload->questions;
     $formId = $requestPayload->formId;
     $apiKey = $requestPayload->apiKey;
 
@@ -43,11 +44,12 @@
         
         for ($j = 0; $j < $columnCount; $j++) {
             if ($data["columns"]["column-$j"]["title"] == $column) {
-                $column = "column-$j";
-                array_push($data["columns"][$column]["cardIds"], "card-$i");
-            } else if ($data["columns"]["column-$j"]["title"] == "") {
-                $column = "column-0";
-                array_push($data["columns"][$column]["cardIds"], "card-$i");
+                $columnId = "column-$j";
+                array_push($data["columns"][$columnId]["cardIds"], "card-$i");
+            } else if (empty($column) == 1) {
+                $columnId = "column-0";
+                $column = "Uncategorized";
+                array_push($data["columns"][$columnId]["cardIds"], "card-$i");
             }
         }
 
@@ -62,7 +64,8 @@
         $newCard = array(
             "id" => "card-$i",
             "content" => $content,
-            "sid" => $sid
+            "sid" => $sid,
+            "column" => $column
         );
 
         array_push($data["cards"], $newCard);
@@ -70,7 +73,9 @@
 
     $result = Array(
         "data" => $data,
-        "qid" => $qid
+        "qid" => $qid,
+        "fid" => $formId,
+        "questions" => $questions
     );
 
     echo json_encode($result);

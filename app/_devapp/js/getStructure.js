@@ -26,6 +26,25 @@ function getFromId() {
     })
 }
 
+function getQids(formID) {
+
+    return new Promise((resolve, reject) => {
+        JF.getFormQuestions(formID, function (response) {
+            const questions = []
+            
+            for (var i in response) {
+                let temp = {
+                    "qid": response[i].qid,
+                    "title": response[i].text
+                }
+
+                questions.push(temp);
+            } 
+            resolve(questions);
+        });
+    })
+}
+
 function getStructure(formId) {
     return new Promise(resolve => {
         global.JF.QuestionPicker(formId, {
@@ -51,10 +70,11 @@ function getStructure(formId) {
 export default async function setUp(component) {
     const apiKey = await login();
     const formId = await getFromId();
+    const questions = await getQids(formId);
     const structure = await getStructure(formId);    
 
     structure["apiKey"] = apiKey;
-
+    structure["questions"] = questions;
     const xmlhttp = new XMLHttpRequest();   // new HttpRequest instance 
 
     // xmlhttp.onreadystatechange = () => {

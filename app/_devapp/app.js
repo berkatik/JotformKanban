@@ -99,16 +99,32 @@ class Myapp extends Component {
     }
 
     addCard = (columnId) => {
+        const submission = new Object();
+        const columnTitle = this.state.data.columns[columnId].title;
+
+
         const newCard = {
             id: `task-${this.state.data.cards.length + 1}`,
-            title: 'New Card',
-            content: 'Fill me in!',
+            content: 'New Card',
+            column: columnTitle
         }
 
         this.state.data.cards.push(newCard);
         this.state.data.columns[columnId].cardIds.push(newCard.id);
 
         this.setState(this.state);
+
+        if(columnTitle != "Uncategorized") {
+            submission[this.state.qid] = columnTitle;
+        } else {
+            submission[this.state.qid] = '';
+        }
+
+        submission[this.state.questions[1].qid] = newCard.content;
+
+        JF.createFormSubmission(this.state.fid, submission, function (response) {
+            console.log(response.URL);
+        });
     }
 
     editCard = (editedCard) => {
@@ -121,8 +137,20 @@ class Myapp extends Component {
             }
         })
 
-        newState.cards[cardIndex] = editedCard;
+        newState.data.cards[cardIndex] = {
+            ...newState.data.cards[cardIndex],
+            ...editedCard
+        };
+
         this.setState(newState);
+
+        const submission = new Object();
+        submission[this.state.questions[1].qid] = editedCard.content;
+
+        JF.editSubmission(newState.data.cards[cardIndex].sid, submission, function (response) {
+            console.log(response.submissionID);
+        })
+
     }
 
     editColumn = (editedColumn) => {
