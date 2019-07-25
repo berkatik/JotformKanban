@@ -1,9 +1,9 @@
 function login() {
     return new Promise(resolve => {
-        JF.login(
+        global.JF.init({ accessType: 'full' });
+        global.JF.login(
             function success() {
-                JF.init({ access: 'full' });
-                resolve(JF.getAPIKey());
+                resolve(global.JF.getAPIKey());
             },
             function error() {
                 window.alert("Could not authorize user");
@@ -15,7 +15,7 @@ function login() {
 
 function getFromId() {
     return new Promise(resolve => {
-        JF.FormPicker({
+        global.JF.FormPicker({
             multiSelect: false,
             infinite_scroll: true,
             search: true,
@@ -28,7 +28,7 @@ function getFromId() {
 
 function getStructure(formId) {
     return new Promise(resolve => {
-        JF.QuestionPicker(formId, {
+        global.JF.QuestionPicker(formId, {
             sort: 'order',
             sortType: 'ASC',
             title: 'Question Picker',
@@ -48,7 +48,7 @@ function getStructure(formId) {
     })
 }
 
-async function init() {
+export default async function setUp(component) {
     const apiKey = await login();
     const formId = await getFromId();
     const structure = await getStructure(formId);    
@@ -56,11 +56,6 @@ async function init() {
     structure["apiKey"] = apiKey;
 
     const xmlhttp = new XMLHttpRequest();   // new HttpRequest instance 
-
-    xmlhttp.onload = function() {
-        const response = document.getElementById("test");
-        response.innerHTML = this.responseText
-    }
 
     // xmlhttp.onreadystatechange = () => {
     //     if (xmlhttp.readyState === 4)  {
@@ -72,9 +67,16 @@ async function init() {
     //     }
     // }
 
-    xmlhttp.open("POST", "connect.php", true);
+    xmlhttp.open("POST", "connect.php", false);
     xmlhttp.setRequestHeader("Content-Type", "application/json");
     xmlhttp.send(JSON.stringify(structure));
+    const res = xmlhttp.response;
+    component.setState(JSON.parse(res));
 }
 
-init();
+// export {
+//     login,
+//     getFromId,
+//     getStructure
+// }
+

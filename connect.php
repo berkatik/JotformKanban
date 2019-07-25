@@ -12,7 +12,7 @@
         "columnOrder" => array()
     );
 
-    $data["columnOrder"] = $structure;
+    // $data["columnOrder"] = $structure;
     $columnCount = sizeof($structure);
 
     for ($i = 0; $i < $columnCount; $i++) {
@@ -23,9 +23,10 @@
         );
 
         $data["columns"]["column-$i"] = $newColumn;
+        array_push($data["columnOrder"], "column-$i");
     }
 
-    include getcwd() . './jotform-api-php/JotForm.php';
+    include getcwd() . '/jotform-api-php/JotForm.php';
     $jotformAPI = new JotForm($apiKey);
     $submissions = ($jotformAPI->getFormSubmissions($formId));
 
@@ -33,6 +34,7 @@
     $cardCount = sizeof($submissions);
     for ($i = 0; $i < $cardCount; $i++) {
         $answers = $submissions[$i]["answers"];
+        $sid = $submissions[$i]["id"];
         $content = "";
         // $column = $answers[$i][]
         $column = $submissions[$i]["answers"][$qid]["answer"];
@@ -59,11 +61,17 @@
 
         $newCard = array(
             "id" => "card-$i",
-            "content" => $content
+            "content" => $content,
+            "sid" => $sid
         );
 
         array_push($data["cards"], $newCard);
     }    
 
-    echo json_encode($data);
+    $result = Array(
+        "data" => $data,
+        "qid" => $qid
+    );
+
+    echo json_encode($result);
 ?>

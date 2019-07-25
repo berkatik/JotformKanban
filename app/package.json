@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.2.3",
+    "@babel/polyfill": "^7.4.4",
     "@babel/preset-react": "^7.0.0",
     "react": "^16.7.0",
     "react-advanced-kanban": "^0.2.3",

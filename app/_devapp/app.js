@@ -1,62 +1,146 @@
 import React, { Component, Fragment } from 'react';
 import { render } from 'react-dom';
 import Kanban from 'react-advanced-kanban';
+import "@babel/polyfill";
+
+
+import setUp from './js/getStructure';
+import renderer from './js/renderer';
 
 /* globals __webpack_public_path__ */
 __webpack_public_path__ = `${window.STATIC_URL}/app/assets/bundle/`;
 
 
 class Myapp extends Component {
-    // getData = () => {
-    //     var xhr = new XMLHttpRequest();
-    //     xhr.open('GET', 'app/_devapp/php/connect.php', false);
-    //     xhr.setRequestHeader("Content-Type", "text/xml");
-    //     xhr.onreadystatechange = function () {
-    //         if (xhr.readyState == 4) {
-    //             if (xhr.status == 200) {
-    //                 console.log(xhr.responseText);
-    //             }
-    //         }
-    //     };
-    //     xhr.send(null);
-    // }
-
-    // componentWillMount() {
-    //     this.getData();
-    // }
-
     state = {
-        "cards": [
-            {
-                "id": 'task-1',
-                "title": 'Take out the garbage',
-                "content": 'Take the garbage from the kitchen and take it out to the dumpster on the street.'
-            },
-            {
-                "id": 'task-2',
-                "title": 'Take dog out for a walk',
-                "content": 'Dog needs to take a walk every morning before going to work, do not forget it!'
-            },
-        ],
-        "columns": {
-            "column-1": {
-                id: "column-1",
-                title: 'To-do',
-                cardIds: ['task-1', 'task-2'],
-            },
-            "column-2": {
-                id: "column-2",
-                title: 'Done',
-                cardIds: [],
+        "data": {
+            "cards": [],
+            "columns": {},
+            "columnOrder": []
+        }
+    }
+
+
+    componentDidMount() {
+        setUp(this);
+    }
+
+    onDragEnd = result => {
+        const { destination, source, draggableId } = result;
+
+        if (!destination) return;
+
+        if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+        const start = this.state.data.columns[source.droppableId];
+        const finish = this.state.data.columns[destination.droppableId];
+
+        if (start === finish) {
+            const newCardIds = Array.from(start.cardIds);
+            newCardIds.splice(source.index, 1);
+            newCardIds.splice(destination.index, 0, draggableId);
+
+            const newColumn = {
+                ...start,
+                cardIds: newCardIds,
+            };
+
+            const newState = {
+                columns: {
+                    ...this.state.columns,
+                    [newColumn.id]: newColumn
+                }
+            };
+
+            this.setState(newState);
+            return;
+        }
+
+        const startCardIds = Array.from(start.cardIds);
+        startCardIds.splice(source.index, 1);
+        const newStart = {
+            ...start,
+            cardIds: startCardIds,
+        }
+
+        const finishCardIds = Array.from(finish.cardIds);
+        finishCardIds.splice(destination.index, 0, draggableId);
+
+        const newFinish = {
+            ...finish,
+            cardIds: finishCardIds,
+        }
+
+        const newState = {
+            ...this.state,
+            data: {
+                ...this.state.data,
+                columns: {
+                    ...this.state.data.columns,
+                    [newStart.id]: newStart,
+                    [newFinish.id]: newFinish,
+                }
             }
-        },
-        "columnOrder": ["column-1", "column-2"]
+        }
+
+        this.setState(newState);
+
+        const card = this.state.data.cards.find(card => card.id == draggableId);
+        const sid = card.sid;
+
+        global.JF.getSubmission(sid, response => {
+            const newResponse = {};
+            newResponse[this.state.qid] = this.state.data.columns[destination.droppableId].title;
+
+            global.JF.editSubmission(sid, newResponse, response => {
+                console.log(response);
+            })
+        })
+    }
+
+    addCard = (columnId) => {
+        const newCard = {
+            id: `task-${this.state.data.cards.length + 1}`,
+            title: 'New Card',
+            content: 'Fill me in!',
+        }
+
+        this.state.data.cards.push(newCard);
+        this.state.data.columns[columnId].cardIds.push(newCard.id);
+
+        this.setState(this.state);
+    }
+
+    editCard = (editedCard) => {
+        let cardIndex;
+        const newState = this.state;
+
+        this.state.data.cards.map((card, index) => {
+            if (card.id === editedCard.id) {
+                cardIndex = index;
+            }
+        })
+
+        newState.cards[cardIndex] = editedCard;
+        this.setState(newState);
+    }
+
+    editColumn = (editedColumn) => {
+        const newState = this.state;
+        newState.data.columns[editedColumn.id] = editedColumn;
+
+        this.setState(newState);
     }
 
     render() {
         return (
-            <Kanban
-                data={this.state}
+            <Kanban 
+                data={ this.state.data } 
+                onDragEnd={this.onDragEnd}
+                addCard={this.addCard}
+                editCard={this.editCard}
+                editColumn={this.editColumn}
+                renderer={renderer}
             ></Kanban>
         )
     }
