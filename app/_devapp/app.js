@@ -158,6 +158,26 @@ class Myapp extends Component {
         newState.data.columns[editedColumn.id] = editedColumn;
 
         this.setState(newState);
+
+        let options = "";
+
+        
+        for (let columnId in this.state.data.columnOrder) {
+            let columnTitle = this.state.data.columns[`column-${columnId}`].title;
+
+            if(columnTitle == "Uncategorized") continue;
+
+            options += `${columnTitle}|`;
+        }
+
+
+        options = options.substring(0, options.length - 1);
+        
+        const question = { options };
+
+        JF.editFormQuestion(this.state.fid, this.state.qid, question, function (response) {
+            console.log(response.qid);
+        });
     }
 
     render() {
